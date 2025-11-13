@@ -6,14 +6,14 @@
  * Allows your Vercel app to communicate with this PHP API
  */
 
-// Allowed origins - Add your Vercel domains here
+// Allowed origins - Add your Vercel domains here (NO trailing slashes!)
 $allowed_origins = [
     'http://localhost:3000',                    // Local development
-    'https://excellencecoop.com/',  
-    'https://www.excellencecoop.com/',  
-    'https://excellencecoop.vercel.app/',              // Replace with your Vercel URL
-    'https://app.excellencecoop.com/',               // Your production domain
-    'https://www.app.excellencecoop.com/',
+    'https://excellencecoop.com',  
+    'https://www.excellencecoop.com',  
+    'https://excellencecoop.vercel.app',        // Replace with your Vercel URL
+    'https://app.excellencecoop.com',           // Your production domain
+    'https://www.app.excellencecoop.com',
 ];
 
 // Get the origin of the request
@@ -23,8 +23,10 @@ $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
 if (in_array($origin, $allowed_origins)) {
     header("Access-Control-Allow-Origin: $origin");
 } else {
-    // For development, you can allow all origins (NOT recommended for production)
-    // header("Access-Control-Allow-Origin: *");
+    // TEMPORARY: Allow all origins for testing (REMOVE in production!)
+    // TODO: Remove this after confirming CORS works
+    header("Access-Control-Allow-Origin: *");
+    error_log("CORS: Origin '$origin' not in allowed list. Allowing for testing.");
 }
 
 // Allowed methods
