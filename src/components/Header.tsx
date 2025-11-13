@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { MobileNav } from "./MobileNav";
 
 // Placeholder for fetching user data - replace with actual logic
 // e.g., fetch from context, zustand store, or server component prop
@@ -32,7 +33,11 @@ const useUser = () => {
   };
 };
 
-export function Header() {
+interface HeaderProps {
+  userType?: string | null;
+}
+
+export function Header({ userType }: HeaderProps = {}) {
   const router = useRouter();
   const user = useUser();
 
@@ -56,20 +61,23 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 items-center gap-4 px-6 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75 border-b border-gray-200/50 shadow-sm">
+    <header className="flex h-16 items-center gap-4 px-4 md:px-6 bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75 border-b border-border/50 shadow-sm">
+      {/* Mobile Navigation */}
+      <MobileNav userType={userType || null} />
+      
       {/* Page title with vibrant styling */}
       <div className="flex items-center gap-3">
-        <div className="w-2 h-8 rounded-full bg-gradient-to-b from-blue-500 to-purple-500"></div>
+        <div className="hidden sm:block w-2 h-8 rounded-full bg-gradient-to-b from-blue-500 to-purple-500"></div>
         <div>
-          <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Dashboard</div>
-          <div className="text-xs text-gray-500">Cooperative Management</div>
+          <div className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">Dashboard</div>
+          <div className="hidden sm:block text-xs text-muted-foreground">Cooperative Management</div>
         </div>
       </div>
       
       {/* Header actions */}
       <div className="ml-auto flex items-center gap-4">
         {/* Theme Toggle with vibrant styling */}
-        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100/50">
+        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-100/50 dark:border-blue-800/50">
           <ThemeToggle />
         </div>
         
@@ -83,30 +91,30 @@ export function Header() {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 p-2 shadow-lg border border-gray-100">
-            <DropdownMenuLabel className="font-normal p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg mb-2">
+          <DropdownMenuContent align="end" className="w-64 p-2 shadow-lg border border-border">
+            <DropdownMenuLabel className="font-normal p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg mb-2">
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
                   {user.imageUrl && <AvatarImage src={user.imageUrl} alt={user.name} />}
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-xs font-bold">{user.initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                  <p className="text-xs text-blue-600 font-medium">Corporate Member</p>
+                  <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Corporate Member</p>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer py-3 px-3 rounded-md hover:bg-blue-50 transition-colors">
-                <div className="p-2 rounded-lg bg-blue-100 mr-3">
-                  <User className="h-4 w-4 text-blue-600" />
+            <DropdownMenuItem className="cursor-pointer py-3 px-3 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 mr-3">
+                  <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <span className="font-medium">Profile Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-3 px-3 rounded-md hover:bg-red-50 transition-colors text-red-600 hover:text-red-700">
-              <div className="p-2 rounded-lg bg-red-100 mr-3">
-                <LogOut className="h-4 w-4 text-red-600" />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-3 px-3 rounded-md hover:bg-red-50 dark:hover:bg-red-950 transition-colors text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900 mr-3">
+                <LogOut className="h-4 w-4 text-red-600 dark:text-red-400" />
               </div>
               <span className="font-medium">Log out</span>
             </DropdownMenuItem>

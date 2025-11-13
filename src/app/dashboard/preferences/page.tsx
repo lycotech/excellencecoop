@@ -60,10 +60,14 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
-  Settings
+  Settings,
+  Building2,
+  Upload,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { cn } from "@/lib/utils";
 
 // Dashboard widget configuration
 const availableWidgets = [
@@ -82,6 +86,9 @@ const widgetSizes = ['small', 'medium', 'large'];
 export default function PreferencesPage() {
   const { user } = useCurrentUser();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>('Corporate Cooperative');
+
   const [preferences, setPreferences] = useState({
     // Dashboard preferences
     widgets: availableWidgets.map(widget => ({
@@ -92,6 +99,13 @@ export default function PreferencesPage() {
                    widget.id === 'loans' ? 3 : Math.floor(Math.random() * 10),
       size: 'medium'
     })),
+    
+    // Company branding
+    company: {
+      name: 'Corporate Cooperative',
+      tagline: 'Management System',
+      logo: null as string | null,
+    },
     
     // Profile preferences
     profile: {
@@ -150,6 +164,26 @@ export default function PreferencesPage() {
   const [isSaving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Load company logo on mount
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('companyLogo');
+    const savedName = localStorage.getItem('companyName');
+    if (savedLogo) {
+      setCompanyLogo(savedLogo);
+      setPreferences(prev => ({
+        ...prev,
+        company: { ...prev.company, logo: savedLogo }
+      }));
+    }
+    if (savedName) {
+      setCompanyName(savedName);
+      setPreferences(prev => ({
+        ...prev,
+        company: { ...prev.company, name: savedName }
+      }));
+    }
+  }, []);
+
   // Track changes
   useEffect(() => {
     setHasChanges(true);
@@ -183,6 +217,37 @@ export default function PreferencesPage() {
     }));
   };
 
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast.error('Logo file must be less than 2MB');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const logoData = reader.result as string;
+        setCompanyLogo(logoData);
+        setPreferences(prev => ({
+          ...prev,
+          company: { ...prev.company, logo: logoData }
+        }));
+        toast.success('Logo uploaded! Click Save to apply.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setCompanyLogo(null);
+    setPreferences(prev => ({
+      ...prev,
+      company: { ...prev.company, logo: null }
+    }));
+    toast.success('Logo removed! Click Save to apply.');
+  };
+
   const savePreferences = async () => {
     try {
       setSaving(true);
@@ -192,6 +257,18 @@ export default function PreferencesPage() {
       
       // In a real app, this would save to the database
       localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      
+      // Save company branding separately for easy access
+      if (preferences.company.logo) {
+        localStorage.setItem('companyLogo', preferences.company.logo);
+      } else {
+        localStorage.removeItem('companyLogo');
+      }
+      localStorage.setItem('companyName', preferences.company.name);
+      localStorage.setItem('companyTagline', preferences.company.tagline);
+      
+      // Trigger a custom event to notify other components
+      window.dispatchEvent(new Event('companyBrandingUpdated'));
       
       setHasChanges(false);
       toast.success('Preferences saved successfully!');
@@ -296,9 +373,10 @@ export default function PreferencesPage() {
 
       {/* Preferences Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="company">Company</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="display">Display</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
@@ -331,14 +409,22 @@ export default function PreferencesPage() {
                   </div>
                   <div className="grid gap-4">
                     {widgets.map(widget => (
-                      <div key={widget.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={widget.id} className={cn(
+                        "flex items-center justify-between p-4 rounded-lg transition-all",
+                        widget.isVisible 
+                          ? "bg-primary/5 elevation-1" 
+                          : "bg-muted/30"
+                      )}>
                         <div className="flex items-center gap-3">
                           <Switch
                             checked={widget.isVisible}
                             onCheckedChange={() => handleWidgetToggle(widget.id)}
                           />
                           <div>
-                            <p className="font-medium">{widget.name}</p>
+                            <p className={cn(
+                              "font-medium",
+                              widget.isVisible ? "text-foreground" : "text-muted-foreground"
+                            )}>{widget.name}</p>
                             <p className="text-sm text-muted-foreground">{widget.description}</p>
                           </div>
                         </div>
@@ -365,6 +451,132 @@ export default function PreferencesPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="company" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                <CardTitle>Company Branding</CardTitle>
+              </div>
+              <CardDescription>
+                Customize your company logo and branding information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="company-logo">Company Logo</Label>
+                  <p className="text-xs text-muted-foreground mt-1 mb-3">
+                    Upload your company logo. Recommended size: 200x200px. Max file size: 2MB
+                  </p>
+                  
+                  <div className="flex items-start gap-4">
+                    {/* Logo Preview */}
+                    <div className="flex-shrink-0">
+                      {companyLogo ? (
+                        <div className="relative group">
+                          <div className="w-32 h-32 rounded-lg elevation-2 overflow-hidden bg-card">
+                            <img 
+                              src={companyLogo} 
+                              alt="Company Logo" 
+                              className="w-full h-full object-contain p-2"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={handleRemoveLogo}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="w-32 h-32 rounded-lg elevation-1 flex items-center justify-center bg-muted">
+                          <Building2 className="h-12 w-12 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload Button */}
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="company-logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      <Label
+                        htmlFor="company-logo"
+                        className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground elevation-2 hover:elevation-3 cursor-pointer transition-all"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Logo
+                      </Label>
+                      
+                      {companyLogo && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemoveLogo}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove Logo
+                        </Button>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Accepted formats: JPG, PNG, SVG, WEBP
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="company-name">Company Name</Label>
+                    <Input
+                      id="company-name"
+                      value={preferences.company.name}
+                      onChange={(e) => updatePreference('company', 'name', e.target.value)}
+                      placeholder="Corporate Cooperative"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company-tagline">Tagline</Label>
+                    <Input
+                      id="company-tagline"
+                      value={preferences.company.tagline}
+                      onChange={(e) => updatePreference('company', 'tagline', e.target.value)}
+                      placeholder="Management System"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Logo Guidelines</p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Use a square image (1:1 ratio) for best results</li>
+                        <li>Ensure logo has good contrast on both light and dark backgrounds</li>
+                        <li>Logo will be displayed in sidebar, login page, and other areas</li>
+                        <li>Changes will take effect after clicking "Save Changes"</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -418,9 +630,12 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <h4 className="font-medium">Profile Visibility</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.profile.showEmail ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <Mail className={cn("h-4 w-4", preferences.profile.showEmail ? "text-primary" : "text-muted-foreground")} />
                       <span className="text-sm">Show email to other members</span>
                     </div>
                     <Switch
@@ -428,9 +643,12 @@ export default function PreferencesPage() {
                       onCheckedChange={(checked) => updatePreference('profile', 'showEmail', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.profile.showPhone ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <Phone className={cn("h-4 w-4", preferences.profile.showPhone ? "text-primary" : "text-muted-foreground")} />
                       <span className="text-sm">Show phone to other members</span>
                     </div>
                     <Switch
@@ -438,9 +656,12 @@ export default function PreferencesPage() {
                       onCheckedChange={(checked) => updatePreference('profile', 'showPhone', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.profile.showLastLogin ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Clock className={cn("h-4 w-4", preferences.profile.showLastLogin ? "text-primary" : "text-muted-foreground")} />
                       <span className="text-sm">Show last login time</span>
                     </div>
                     <Switch
@@ -469,9 +690,12 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <h4 className="font-medium">Notification Channels</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.emailNotifications ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <Mail className={cn("h-4 w-4", preferences.notifications.emailNotifications ? "text-primary" : "text-muted-foreground")} />
                       <span className="text-sm">Email notifications</span>
                     </div>
                     <Switch
@@ -479,9 +703,12 @@ export default function PreferencesPage() {
                       onCheckedChange={(checked) => updatePreference('notifications', 'emailNotifications', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.smsNotifications ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <Phone className={cn("h-4 w-4", preferences.notifications.smsNotifications ? "text-primary" : "text-muted-foreground")} />
                       <span className="text-sm">SMS notifications</span>
                     </div>
                     <Switch
@@ -489,9 +716,12 @@ export default function PreferencesPage() {
                       onCheckedChange={(checked) => updatePreference('notifications', 'smsNotifications', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.pushNotifications ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-muted-foreground" />
+                      <Bell className={cn("h-4 w-4", preferences.notifications.pushNotifications ? "text-primary" : "text-muted-foreground")} />
                       <span className="text-sm">Push notifications</span>
                     </div>
                     <Switch
@@ -507,35 +737,50 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <h4 className="font-medium">Notification Types</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.contributionReminders ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Contribution reminders</span>
                     <Switch
                       checked={preferences.notifications.contributionReminders}
                       onCheckedChange={(checked) => updatePreference('notifications', 'contributionReminders', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.loanReminders ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Loan payment reminders</span>
                     <Switch
                       checked={preferences.notifications.loanReminders}
                       onCheckedChange={(checked) => updatePreference('notifications', 'loanReminders', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.meetingNotifications ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Meeting notifications</span>
                     <Switch
                       checked={preferences.notifications.meetingNotifications}
                       onCheckedChange={(checked) => updatePreference('notifications', 'meetingNotifications', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.systemUpdates ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">System updates</span>
                     <Switch
                       checked={preferences.notifications.systemUpdates}
                       onCheckedChange={(checked) => updatePreference('notifications', 'systemUpdates', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.notifications.marketingEmails ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Marketing emails</span>
                     <Switch
                       checked={preferences.notifications.marketingEmails}
@@ -655,14 +900,20 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <h4 className="font-medium">Interface Options</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.display.showHelperText ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Show helper text and tooltips</span>
                     <Switch
                       checked={preferences.display.showHelperText}
                       onCheckedChange={(checked) => updatePreference('display', 'showHelperText', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.display.dashboardRefresh === 'auto' ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Auto-refresh dashboard</span>
                     <Switch
                       checked={preferences.display.dashboardRefresh === 'auto'}
@@ -709,21 +960,30 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <h4 className="font-medium">Privacy Options</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.privacy.showOnlineStatus ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Show online status</span>
                     <Switch
                       checked={preferences.privacy.showOnlineStatus}
                       onCheckedChange={(checked) => updatePreference('privacy', 'showOnlineStatus', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.privacy.allowDataExport ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Allow data export</span>
                     <Switch
                       checked={preferences.privacy.allowDataExport}
                       onCheckedChange={(checked) => updatePreference('privacy', 'allowDataExport', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.privacy.shareUsageData ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Share usage data for improvements</span>
                     <Switch
                       checked={preferences.privacy.shareUsageData}
@@ -737,7 +997,10 @@ export default function PreferencesPage() {
 
               <div className="space-y-4">
                 <h4 className="font-medium">Two-Factor Authentication</h4>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className={cn(
+                  "flex items-center justify-between p-4 rounded-lg transition-all",
+                  preferences.privacy.twoFactorEnabled ? "bg-primary/5 elevation-1" : "bg-muted/30"
+                )}>
                   <div>
                     <p className="font-medium">Enable 2FA</p>
                     <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
@@ -793,14 +1056,20 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <h4 className="font-medium">Security Notifications</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.account.loginNotifications ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Notify me of new logins</span>
                     <Switch
                       checked={preferences.account.loginNotifications}
                       onCheckedChange={(checked) => updatePreference('account', 'loginNotifications', checked)}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-lg transition-all",
+                    preferences.account.accountActivity ? "bg-primary/5" : "bg-muted/30"
+                  )}>
                     <span className="text-sm">Account activity alerts</span>
                     <Switch
                       checked={preferences.account.accountActivity}

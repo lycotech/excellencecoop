@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,18 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>('Corporate Cooperative');
   const router = useRouter();
+
+  // Load company branding
+  useEffect(() => {
+    const logo = localStorage.getItem('companyLogo');
+    const name = localStorage.getItem('companyName');
+    
+    if (logo) setCompanyLogo(logo);
+    if (name) setCompanyName(name);
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,53 +78,56 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-100 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 right-20 w-80 h-80 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-10 left-20 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <div className="w-full max-w-lg space-y-8 relative z-10">
-        {/* Logo/Branding Section - Enhanced */}
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 transition-all duration-300">
-            <div className="text-3xl font-bold text-white">🌟</div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-lg space-y-6">
+        {/* Logo/Branding Section */}
+        <div className="text-center space-y-3">
+          <div className="mx-auto w-20 h-20 bg-primary rounded-lg flex items-center justify-center elevation-2 overflow-hidden">
+            {companyLogo ? (
+              <img 
+                src={companyLogo} 
+                alt="Company Logo" 
+                className="w-full h-full object-contain p-2"
+              />
+            ) : (
+              <svg className="w-10 h-10 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-              Join Our Cooperative! 
+            <h1 className="text-2xl font-semibold text-foreground">
+              Join {companyName}
             </h1>
-            <p className="text-gray-600 text-base font-medium mt-2">🚀 Create your account to get started</p>
+            <p className="text-muted-foreground text-sm mt-1">Create your account to get started</p>
           </div>
         </div>
 
-        {/* Register Card - Completely Redesigned */}
-        <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-md">
+        {/* Register Card */}
+        <Card>
           <form onSubmit={handleSubmit}>
-            <CardHeader className="space-y-2 pb-8 text-center">
-              <CardTitle className="text-2xl font-bold text-gray-900">✨ Create Your Account</CardTitle>
-              <CardDescription className="text-gray-600 text-base">
-                Fill in your details to join our amazing cooperative community
+            <CardHeader className="space-y-1 text-center">
+              <CardTitle className="text-xl font-semibold">Create Your Account</CardTitle>
+              <CardDescription>
+                Fill in your details to join our cooperative
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 px-8">
-              <div className="space-y-3">
-                <Label htmlFor="staff-no" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  🆔 Staff Number
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="staff-no">
+                  Staff Number
                 </Label>
                 <Input
                   id="staff-no"
-                  placeholder="Enter your staff number (e.g. 12345)"
+                  placeholder="Enter your staff number"
                   value={staffNo}
                   onChange={(e) => setStaffNo(e.target.value)}
-                  className="border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 rounded-xl h-12 px-4 transition-all duration-200 bg-white/80"
                   required
                 />
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="email" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  📧 Email Address
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email Address
                 </Label>
                 <Input
                   id="email"
@@ -121,13 +135,12 @@ export default function RegisterPage() {
                   placeholder="member@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl h-12 px-4 transition-all duration-200 bg-white/80"
                   required
                 />
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="password" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  🔒 Password
+              <div className="space-y-2">
+                <Label htmlFor="password">
+                  Password
                 </Label>
                 <Input
                   id="password"
@@ -135,13 +148,12 @@ export default function RegisterPage() {
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 rounded-xl h-12 px-4 transition-all duration-200 bg-white/80"
                   required
                 />
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="confirm-password" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  ✅ Confirm Password
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">
+                  Confirm Password
                 </Label>
                 <Input
                   id="confirm-password"
@@ -149,51 +161,48 @@ export default function RegisterPage() {
                   placeholder="Confirm your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="border-2 border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 rounded-xl h-12 px-4 transition-all duration-200 bg-white/80"
                   required
                 />
               </div>
               {error && (
-                <div className="p-4 text-sm text-red-700 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl shadow-sm">
-                  ❌ {error}
+                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+                  {error}
                 </div>
               )}
               {success && (
-                <div className="p-4 text-sm text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl shadow-sm">
-                  🎉 {success}
+                <div className="p-3 text-sm text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-400 rounded-lg">
+                  {success}
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex flex-col space-y-6 pt-8 px-8">
+            <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white shadow-xl transform hover:scale-105 transition-all duration-200 border-0 rounded-xl text-base font-semibold" 
+                className="w-full" 
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Creating your account...
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Creating account...
                   </div>
                 ) : (
-                  '🎯 Create My Account'
+                  'Create Account'
                 )}
               </Button>
-              <div className="text-center p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <Link href="/login" className="text-emerald-600 hover:text-blue-600 underline font-semibold transition-colors">
-                    🔑 Sign in here
-                  </Link>
-                </p>
+              <div className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/login" className="text-primary hover:underline font-medium">
+                  Sign in here
+                </Link>
               </div>
             </CardFooter>
           </form>
         </Card>
 
-        {/* Footer - Enhanced */}
-        <div className="text-center text-sm text-gray-600 font-medium">
-          © 2025 Corporate Cooperative Management System 💚
+        {/* Footer */}
+        <div className="text-center text-xs text-muted-foreground">
+          © 2025 Corporate Cooperative Management System
         </div>
       </div>
     </div>

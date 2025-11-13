@@ -31,9 +31,9 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
+          storageKey="cooperative-theme"
         >
           <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
             {children}

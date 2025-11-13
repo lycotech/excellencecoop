@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { SkipToContent, LiveRegion } from "@/components/AccessibleComponent";
 import React from "react";
 import { cookies } from 'next/headers'; // Import cookies
 import { jwtVerify } from 'jose'; // Import jose
@@ -70,21 +71,32 @@ export default async function DashboardLayout({
   console.log("Layout: User type retrieved:", userType);
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Sidebar with enhanced styling */}
-      <div className="hidden md:flex">
+    <div className="flex h-screen bg-background">
+      {/* Accessibility: Skip to content link */}
+      <SkipToContent />
+      
+      {/* Accessibility: Live region for announcements */}
+      <LiveRegion />
+      
+      {/* Sidebar */}
+      <div className="hidden md:flex elevation-2" role="navigation" aria-label="Main navigation">
         <Sidebar userType={userType} />
       </div>
       
       <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Header with gradient border */}
-        <div className="border-b border-gradient-to-r from-blue-200 to-purple-200 bg-white/80 backdrop-blur-sm shadow-sm">
-          <Header />
+        {/* Header */}
+        <div className="bg-card elevation-1" role="banner">
+          <Header userType={userType} />
         </div>
         
-        {/* Main content with vibrant background */}
-        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-transparent to-blue-50/30">
-          <div className="container mx-auto px-6 py-8 space-y-8 max-w-7xl">
+        {/* Main content with clean background */}
+        <main 
+          id="main-content"
+          className="flex-1 overflow-y-auto bg-background"
+          role="main"
+          aria-label="Main content"
+        >
+          <div className="container mx-auto px-6 py-8 space-y-6 max-w-7xl">
             {children}
           </div>
         </main>

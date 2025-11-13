@@ -62,79 +62,85 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-100 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <Card className="w-full max-w-md border-0 shadow-2xl bg-white/90 backdrop-blur-md relative z-10">
-        <form onSubmit={handleSubmit}>
-          <CardHeader className="text-center space-y-4 pb-8">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
-              <div className="text-2xl">🔑</div>
-            </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <div className="text-center space-y-3">
+          <div className="mx-auto w-16 h-16 bg-primary rounded-lg flex items-center justify-center elevation-2">
+            <svg className="w-8 h-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">
               Forgot Password?
-            </CardTitle>
-            <CardDescription className="text-gray-600 text-base leading-relaxed">
-              No worries! 💜 Enter your email or staff number and we'll send you a secure link to reset your password.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 px-8">
-            <div className="space-y-3">
-              <Label htmlFor="identifier" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                📧 Email / Staff Number
-              </Label>
-              <Input
-                id="identifier"
-                type="text"
-                placeholder="m@example.com or M001"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-xl h-12 px-4 transition-all duration-200 bg-white/80"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            {message && (
-              <div className="p-4 text-sm text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl shadow-sm">
-                ✅ {message}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">Enter your email or staff number to reset your password</p>
+          </div>
+        </div>
+
+        <Card>
+          <form onSubmit={handleSubmit}>
+            <CardHeader className="text-center space-y-1">
+              <CardTitle className="text-xl font-semibold">Reset Password</CardTitle>
+              <CardDescription>
+                We'll send you a secure link to reset your password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="identifier">
+                  Email / Staff Number
+                </Label>
+                <Input
+                  id="identifier"
+                  type="text"
+                  placeholder="m@example.com or M001"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
-            )}
-            {error && (
-              <div className="p-4 text-sm text-red-700 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl shadow-sm">
-                ❌ {error}
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-6 pt-8 px-8">
-            <Button 
-              type="submit" 
-              className="w-full h-12 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-xl transform hover:scale-105 transition-all duration-200 border-0 rounded-xl text-base font-semibold" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Sending reset link...
+              {message && (
+                <div className="p-3 text-sm text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-400 rounded-lg">
+                  {message}
                 </div>
-              ) : (
-                '🚀 Send Reset Link'
               )}
-            </Button>
-            <div className="text-center p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl w-full">
-              <p className="text-sm text-gray-600">
+              {error && (
+                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+                  {error}
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Sending...
+                  </div>
+                ) : (
+                  'Send Reset Link'
+                )}
+              </Button>
+              <div className="text-center text-sm text-muted-foreground">
                 Remembered your password?{" "}
-                <Link href="/login" className="text-indigo-600 hover:text-purple-600 underline font-semibold transition-colors">
-                  🔓 Sign in here
+                <Link href="/login" className="text-primary hover:underline font-medium">
+                  Sign in here
                 </Link>
-              </p>
-            </div>
-          </CardFooter>
-        </form>
-      </Card>
+              </div>
+            </CardFooter>
+          </form>
+        </Card>
+
+        <div className="text-center text-xs text-muted-foreground">
+          © 2025 Corporate Cooperative Management System
+        </div>
+      </div>
     </div>
   );
 } 

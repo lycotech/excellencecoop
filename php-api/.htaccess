@@ -1,0 +1,90 @@
+# Security and Configuration for PHP API
+
+# Enable RewriteEngine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /api/
+    
+    # Force HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Disable PHP execution in uploads folder (if you have one)
+<FilesMatch "\.(php|php3|php4|php5|phtml)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Allow PHP execution only in API folder
+<FilesMatch "^(login|register|get-users|get-user|verify-token|get-members|create-member|get-loans|create-loan)\.php$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Protect config files
+<FilesMatch "^(database|cors|jwt)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Compress text files
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+</IfModule>
+
+# Browser caching for API responses (short cache)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Enable XSS protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Remove X-Powered-By header
+    Header unset X-Powered-By
+    
+    # Content Security Policy
+    Header always set Content-Security-Policy "default-src 'self'"
+</IfModule>
+
+# Limit file upload size (adjust as needed)
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+
+# Hide PHP version
+php_flag expose_php off
+
+# Set error reporting (disable in production)
+php_flag display_errors off
+php_flag log_errors on
+php_value error_log /home/your_username/public_html/api/error.log
+
+# Session settings
+php_value session.cookie_httponly 1
+php_value session.cookie_secure 1
+php_value session.use_only_cookies 1
+
+# Prevent access to sensitive files
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|env)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+

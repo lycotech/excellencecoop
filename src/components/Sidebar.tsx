@@ -104,6 +104,32 @@ interface SidebarProps {
 export function Sidebar({ userType }: SidebarProps) { // Destructure userType from props
   const pathname = usePathname();
   const [openState, setOpenState] = useState<{ [key: string]: boolean }>({});
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>('Coop Portal');
+  const [companyTagline, setCompanyTagline] = useState<string>('Management System');
+
+  // Load company branding
+  useEffect(() => {
+    const loadBranding = () => {
+      const logo = localStorage.getItem('companyLogo');
+      const name = localStorage.getItem('companyName');
+      const tagline = localStorage.getItem('companyTagline');
+      
+      if (logo) setCompanyLogo(logo);
+      if (name) setCompanyName(name);
+      if (tagline) setCompanyTagline(tagline);
+    };
+
+    loadBranding();
+
+    // Listen for branding updates
+    const handleBrandingUpdate = () => loadBranding();
+    window.addEventListener('companyBrandingUpdated', handleBrandingUpdate);
+
+    return () => {
+      window.removeEventListener('companyBrandingUpdated', handleBrandingUpdate);
+    };
+  }, []);
 
   // Determine which menu structure to use based on userType prop
   const menuItems = userType === 'Member' ? memberMenu : adminMenu;
@@ -166,27 +192,27 @@ export function Sidebar({ userType }: SidebarProps) { // Destructure userType fr
     const isActiveBranch = item.href !== '#' && item.href !== '/dashboard' && pathname.startsWith(item.href);
     const isActive = isActiveStrict || isActiveBranch;
 
-    return (
-      <Link
-        key={item.name}
-        href={item.href}
-        className={cn(
-          "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group",
-          isSubItem && "pl-4 py-2 text-sm font-medium",
-          isActive
-            ? isSubItem 
-              ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-l-4 border-blue-500"
-              : "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-            : isSubItem
-              ? "hover:bg-blue-50 text-gray-600 hover:text-blue-600"
-              : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 hover:text-blue-600 hover:shadow-md"
-        )}
-      >
+  return (
+    <Link
+      key={item.name}
+      href={item.href}
+      className={cn(
+        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 group",
+        isSubItem && "pl-8 py-2",
+        isActive
+          ? isSubItem 
+            ? "bg-primary/10 text-primary font-medium"
+            : "bg-primary text-primary-foreground elevation-2"
+          : isSubItem
+            ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+            : "text-foreground hover:bg-muted hover:elevation-1"
+      )}
+    >
         <item.icon className={cn(
-          "h-4 w-4 flex-shrink-0 transition-colors",
+          "h-5 w-5 flex-shrink-0 transition-colors",
           isActive 
-            ? isSubItem ? "text-blue-600" : "text-white"
-            : "text-gray-600 group-hover:text-blue-600"
+            ? isSubItem ? "text-primary" : "text-primary-foreground"
+            : "text-muted-foreground group-hover:text-primary"
         )} />
         {item.name}
       </Link>
@@ -199,22 +225,30 @@ export function Sidebar({ userType }: SidebarProps) { // Destructure userType fr
   // Optional: Handle case where userType is null (e.g., not logged in, token invalid)
   if (!userType) {
       // Option 1: Render nothing or minimal sidebar
-      return <aside className="hidden md:block w-64 border-r p-4">Please log in.</aside>;
+      return <aside className="hidden md:block w-64 p-4 bg-card">Please log in.</aside>;
       // Option 2: Render the sidebar structure but without menu items
       // return <aside className="hidden md:block w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground p-4 flex-shrink-0 overflow-y-auto">...</aside>;
   }
 
   return (
-    <aside className="hidden md:flex w-64 flex-col bg-white border-r border-gray-200/50 shadow-lg">
-      {/* Logo/Brand Section with Gradient */}
-      <div className="flex items-center px-6 py-6 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-purple-50">
+    <aside className="hidden md:flex w-64 flex-col bg-card">
+      {/* Logo/Brand Section */}
+      <div className="flex items-center px-6 py-6 bg-card">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-            <LayoutDashboard className="h-5 w-5 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary elevation-2 overflow-hidden">
+            {companyLogo ? (
+              <img 
+                src={companyLogo} 
+                alt="Company Logo" 
+                className="w-full h-full object-contain p-1"
+              />
+            ) : (
+              <LayoutDashboard className="h-6 w-6 text-primary-foreground" />
+            )}
           </div>
           <div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Coop Portal</h2>
-            <p className="text-xs text-gray-600 font-medium">Management System</p>
+            <h2 className="text-xl font-bold text-foreground">{companyName}</h2>
+            <p className="text-xs text-muted-foreground font-medium">{companyTagline}</p>
           </div>
         </div>
       </div>
@@ -235,28 +269,28 @@ export function Sidebar({ userType }: SidebarProps) { // Destructure userType fr
                 <CollapsibleTrigger asChild>
                    <button
                       className={cn(
-                        "flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group",
+                        "flex items-center justify-between w-full px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 group",
                          isParentActive
-                         ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                         : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700 hover:text-blue-600 hover:shadow-md"
+                         ? "bg-primary text-primary-foreground elevation-2"
+                         : "text-foreground hover:bg-muted hover:elevation-1"
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <item.icon className={cn(
                           "h-5 w-5 flex-shrink-0 transition-colors",
-                          isParentActive ? "text-white" : "text-gray-600 group-hover:text-blue-600"
+                          isParentActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary"
                         )} />
                         {item.name}
                       </div>
                       <ChevronRight className={cn(
                         "h-4 w-4 transition-transform duration-200",
                         isOpen && "rotate-90",
-                        isParentActive ? "text-white" : "text-gray-500 group-hover:text-blue-600"
+                        isParentActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary"
                       )} />
                    </button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2 space-y-1">
-                  <div className="ml-6 border-l-2 border-gradient-to-b border-blue-200 pl-4 space-y-1">
+                <CollapsibleContent className="mt-1 space-y-1">
+                  <div className="ml-2 pl-2 space-y-1">
                     {item.subItems.map((subItem) => renderLink(subItem, true))}
                   </div>
                 </CollapsibleContent>
@@ -269,10 +303,10 @@ export function Sidebar({ userType }: SidebarProps) { // Destructure userType fr
         })}
       </nav>
       
-      {/* Footer/User Info with Gradient */}
-      <div className="p-6 border-t border-gray-200/50 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
-        <div className="text-sm font-medium text-gray-700 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          {userType ? `✨ ${userType} Portal` : '👋 Guest User'}
+      {/* Footer/User Info */}
+      <div className="p-6 mt-auto bg-muted/30">
+        <div className="text-sm font-medium text-foreground uppercase tracking-wide">
+          {userType ? `${userType} Portal` : 'Guest User'}
         </div>
       </div>
     </aside>
