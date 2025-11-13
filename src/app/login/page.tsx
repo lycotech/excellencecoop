@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Users, ShoppingCart, Eye, EyeOff, Mail, Lock, Sparkles, AlertCircle } from "lucide-react";
+import { authApi } from '@/lib/api-client';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -53,24 +54,25 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
-      });
+      // Use PHP API instead of old Next.js API route
+      const response = await authApi.login(identifier, password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed');
       }
 
-      console.log('Login successful:', data);
-      // TODO: Implement proper session management (e.g., store token)
+      console.log('Login successful:', response.data);
+      
+      // Token is automatically saved by authApi.login()
+      // Optionally save user data to localStorage
+      if (response.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
       router.push('/dashboard'); // Redirect to dashboard on success
 
     } catch (err) {
-      console.error(err);
+      console.error('Login error:', err);
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
     } finally {

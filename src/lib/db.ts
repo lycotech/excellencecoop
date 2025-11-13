@@ -21,10 +21,15 @@ export function getDbPool() {
     // Add a check for essential environment variables before creating the pool
     if (!dbConfig.user || !dbConfig.password || !dbConfig.host || !dbConfig.database) {
         console.error('Database configuration error: Missing required environment variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME).');
-        // Optionally, throw an error to prevent pool creation with incomplete config
-        // throw new Error('Missing required database environment variables.');
-        // Or return null/handle gracefully depending on application needs
-        return null; // Example: return null, adjust as needed
+        return null;
+    }
+
+    // Check if using dummy/placeholder credentials (during migration to PHP API)
+    if (dbConfig.user === 'dummy' || dbConfig.user === 'dummy_user' || dbConfig.password === 'dummy' || dbConfig.password === 'dummy_password') {
+        console.warn('⚠️  Using dummy database credentials - Direct MySQL connections disabled.');
+        console.warn('📌 This app is migrating to use PHP API at:', process.env.NEXT_PUBLIC_API_URL);
+        console.warn('💡 Update your pages to use the API client from @/lib/api-client.ts');
+        return null; // Return null to prevent actual connection attempts
     }
 
     try {
@@ -32,7 +37,7 @@ export function getDbPool() {
       console.log('MySQL connection pool created successfully.');
     } catch (error) {
       console.error('Error creating MySQL connection pool:', error);
-      throw error; // Update DBRe-throw the error to indicate failure
+      throw error;
     }
   }
   return pool;

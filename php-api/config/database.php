@@ -9,8 +9,8 @@
 class Database {
     private $host = "localhost";
     private $db_name = "excellence_coopdb";  // Change to your database name
-    private $username = "root";               // Change to your cPanel username_dbuser
-    private $password = "";                   // Change to your database password
+    private $username = "excellence_coopruser";               // Change to your cPanel username_dbuser
+    private $password = "KR!;IxN7pRH8^{Dl";                   // Change to your database password
     private $conn;
 
     /**

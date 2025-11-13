@@ -7,7 +7,7 @@
  */
 
 class JWT {
-    private static $secret_key = "your-super-secret-jwt-key-change-this"; // CHANGE THIS!
+    private static $secret_key = "f5e1c332fc47cb7de1b06b8121792ac8fe9beb38e202d01f6d92ab247888184603d880590916e05705cb4cef88427ed6d1ead39de76d317f02f92ec36cc1b3d2"; // CHANGE THIS!
     private static $algorithm = 'HS256';
     private static $expiration = 86400; // 24 hours in seconds
 

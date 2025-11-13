@@ -35,6 +35,16 @@ export async function POST(request: NextRequest) {
     }
 
     const pool = getDbPool();
+    
+    // Check if pool is available (null during migration to PHP API)
+    if (!pool) {
+      return NextResponse.json({ 
+        error: 'Database connection not available. Please use the PHP API endpoint instead.',
+        migration_note: 'This app is migrating to PHP API. Update your code to use @/lib/api-client.ts',
+        php_api_url: process.env.NEXT_PUBLIC_API_URL 
+      }, { status: 503 });
+    }
+    
     connection = await pool.getConnection();
 
     // Find user by staff_no or email - Select necessary fields for JWT

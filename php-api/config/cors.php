@@ -9,9 +9,11 @@
 // Allowed origins - Add your Vercel domains here
 $allowed_origins = [
     'http://localhost:3000',                    // Local development
-    'https://your-app.vercel.app',              // Replace with your Vercel URL
-    'https://excellencecoop.com',               // Your production domain
-    'https://www.excellencecoop.com',
+    'https://excellencecoop.com/',  
+    'https://www.excellencecoop.com/',  
+    'https://excellencecoop.vercel.app/',              // Replace with your Vercel URL
+    'https://app.excellencecoop.com/',               // Your production domain
+    'https://www.app.excellencecoop.com/',
 ];
 
 // Get the origin of the request
